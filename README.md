@@ -4,7 +4,7 @@
 
 #
 
-> [!TIP] > **_基于 new-api，one-api 聚合模型对话 Telegram 的机器人，操作方便，部署简单，动态拉取 API 所支持的所有模型（openai 官方 API 也支持）_** <br> > **_动态获取 api 支持的所有模型_** <br> > **_支持 AMD64/ARM64_** <br> > **_镜像大小 17M，内存占用 10M_** <br> > **——By [drfyup](https://hstz.com)**
+> [!TIP] > **基于 new-api，one-api 聚合模型对话 Telegram 的机器人，操作方便，部署简单，动态拉取 API 所支持的所有模型（openai 官方 API 也支持）** <br> > **动态获取 api 支持的所有模型** <br> > **支持 AMD64/ARM64** <br> > **镜像大小 17M，内存占用 10M** <br> > **——By [drfyup](https://hstz.com)**
 
 #
 
