@@ -2,7 +2,7 @@ version: '3'
 services:
   tg-bot:
     container_name: fyaitg # 定义容器名
-    image: fyaitg # 定义镜像名
+    image: drfyup/fyaitg:latest # 或者ghcr.io/3377/fyaitg:latest
     build: .
     volumes:
       - ./config:/app/config
