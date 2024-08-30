@@ -27,30 +27,37 @@
 
 #### 安装 Docker
 
-````bash
+```bash
 
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 安装 Docker Compose
 在安装 Docker 后，您可以使用以下命令安装 Docker Compose：
+```
 
 ```bash
 
 sudo curl -L "https://github.com/docker/compose/releases/download/v2.15.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
+```
+
 你可以通过运行以下命令确认 Docker 和 Docker Compose 已正确安装：
 
 ```bash
 
 docker --version
 docker-compose --version
+```
+
 2. 项目目录结构
-克隆仓库到本地并进入项目根目录：
+   克隆仓库到本地并进入项目根目录：
 
 ```bash
 
 git clone https://github.com/drfyup/telegram-chatbot.git
 cd telegram-chatbot
+```
+
 项目的目录结构如下：
 
 ```plaintext
@@ -62,11 +69,12 @@ cd telegram-chatbot
 ├── Dockerfile                    # Docker镜像描述文件
 ├── docker-compose.yaml           # Docker Compose配置文件
 └── README.md                     # 项目说明文档
+```
+
 3. 配置文件设置
-在启动 Docker 容器之前，请确保编辑 config/config.yaml 文件以包含正确的 Telegram Token 和 OpenAI 的 API Key，并根据需要配置其他参数。示例如下：
+   在启动 Docker 容器之前，请确保编辑 config/config.yaml 文件以包含正确的 Telegram Token 和 OpenAI 的 API Key，并根据需要配置其他参数。示例如下：
 
 ```yaml
-
 telegram_token: "your-telegram-token" # 你的Telegram机器人Token
 openai_config:
   api_key: "your-openai-api-key" # OpenAI的API密钥
@@ -79,7 +87,7 @@ allowed_users:
   - 123456789 # 允许交互的用户ID列表
 allowed_channels:
   - "123456" # 允许交互的频道列表
-````
+```
 
 4. 启动项目
    该项目已在 Docker Hub 上构建并发布，仓库及镜像名为 drfyup/fyaitg:latest。您可以直接使用以下步骤快速启动项目：
