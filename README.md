@@ -59,7 +59,7 @@ docker-compose --version
 
 ```bash
 
-git clone https://github.com/drfyup/telegram-chatbot.git
+git clone [https://github.com/drfyup/telegram-chatbot.git](https://github.com/3377/fyaitg.git)
 cd telegram-chatbot
 ```
 
