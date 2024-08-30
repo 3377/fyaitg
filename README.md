@@ -13,6 +13,9 @@
 
 #
 
+##效果图
+![image](https://github.com/user-attachments/assets/67d80879-55b8-40fd-b49d-6654a15b3adf)
+
 ## 功能说明
 
 本项目提供了以下主要功能：
