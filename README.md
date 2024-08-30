@@ -42,9 +42,10 @@
 
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
+```
 安装 Docker Compose
 在安装 Docker 后，您可以使用以下命令安装 Docker Compose：
-```
+
 
 ```bash
 
@@ -87,18 +88,18 @@ cd fyaitg
    示例如下：
 
 ```yaml
-telegram_token: "your-telegram-token" # 你的Telegram机器人Token
+telegram_token: ""
 openai_config:
-  api_key: "your-openai-api-key" # OpenAI的API密钥
-  api_url: "https://api.openai.com/v1" # OpenAI的API地址
-default_model: "text-davinci-003" # 设置OpenAI默认使用的模型
-system_prompt: "You are a helpful assistant." # 系统对话开场词
-history_length: 5 # 储存对话的轮数
-history_timeout_minutes: 10 # 对话超时时间（分钟）
+  api_key: ""
+  api_url: "" # 类似 https://api.openai.com/v1，写到v1截止
+default_model: "gpt-4o-mini" # 初始化模型，不写没关系，动态获取后直接选择即可
+system_prompt: "基于中文对话"  # 系统提示词配置
+history_length: 10 # 保存的最近对话轮数
+history_timeout_minutes: 30 # 对话保留时间，单位：分钟
 allowed_users:
-  - 123456789 # 允许交互的用户ID列表
+  - tg号  # Telegram用户ID
 allowed_channels:
-  - "123456" # 允许交互的频道列表
+  - "频道号"  # 允许的Telegram频道名称
 ```
 
 4. 启动项目
