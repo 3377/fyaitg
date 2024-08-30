@@ -83,7 +83,7 @@ cd fyaitg
 └── README.md                     # 项目说明文档
 ```
 
-3. *** 修改配置文件 ***
+3. 修改配置文件 
    在启动 Docker 容器之前，请确保编辑 config/config.yaml 文件以包含正确的 Telegram Token 和 OpenAI 的 API Key，并根据需要配置其他参数。
    示例如下：
 
@@ -115,7 +115,7 @@ docker run -d --name telegram-bot -v $(pwd)/config:/app/config -p 8000:8000 drfy
 
 这个命令将启动机器人，并挂载本地的配置文件目录到容器内部的 /app/config 路径，确保配置文件能够被读取并使用。外部端口 8000 暴露出来以便进行健康检查（可选）。
 
-*** 推荐-使用 Docker Compose 启动 ***
+推荐-使用 Docker Compose 启动 
 如果您希望使用 Docker Compose 进行部署，则可以直接使用已经准备好的 docker-compose.yaml 文件。执行以下命令：
 
 ```bash
