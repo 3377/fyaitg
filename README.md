@@ -15,7 +15,8 @@
 
 ## 效果图  
 
-![image](https://github.com/user-attachments/assets/5742ee38-324f-4afc-b67b-11758d289777)
+![image](https://github.com/user-attachments/assets/5742ee38-324f-4afc-b67b-11758d289777)![image](https://github.com/user-attachments/assets/1e9d3515-920f-4129-9230-129f41e59d5e)
+
 
 
 ## 功能说明
