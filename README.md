@@ -54,13 +54,13 @@ docker --version
 docker-compose --version
 ```
 
-2. 项目目录结构
-   克隆仓库到本地并进入项目根目录：
+2. 目录结构和使用方式
+   在系统任意目录克隆仓库到本地并进入项目根目录：
 
 ```bash
 
-git clone [https://github.com/drfyup/telegram-chatbot.git](https://github.com/3377/fyaitg.git)
-cd telegram-chatbot
+git clone https://github.com/3377/fyaitg.git
+cd fyaitg
 ```
 
 项目的目录结构如下：
@@ -76,8 +76,9 @@ cd telegram-chatbot
 └── README.md                     # 项目说明文档
 ```
 
-3. 配置文件设置
-   在启动 Docker 容器之前，请确保编辑 config/config.yaml 文件以包含正确的 Telegram Token 和 OpenAI 的 API Key，并根据需要配置其他参数。示例如下：
+3. 修改配置文件
+   在启动 Docker 容器之前，请确保编辑 config/config.yaml 文件以包含正确的 Telegram Token 和 OpenAI 的 API Key，并根据需要配置其他参数。
+   示例如下：
 
 ```yaml
 telegram_token: "your-telegram-token" # 你的Telegram机器人Token
