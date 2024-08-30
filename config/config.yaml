@@ -1,0 +1,12 @@
+telegram_token: "" #tg bot token
+openai_config:
+  api_key: "" #api key
+  api_url: "" #v1截止 如：https://api.openai.com/v1
+default_model: "drfy-gpt-4o-mini" #初始化模型，不写没关系，动态获取后直接选择即可
+system_prompt: "基于中文对话" # 系统提示词配置
+history_length: 10 # 保存的最近对话轮数
+history_timeout_minutes: 30 # 对话保留时间，单位：分钟
+allowed_users:
+  - tg号 # Telegram用户ID
+allowed_channels:
+  - "频道号" # 允许的Telegram频道名称

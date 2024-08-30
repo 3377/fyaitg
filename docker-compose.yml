@@ -1,0 +1,9 @@
+version: '3'
+services:
+  tg-bot:
+    container_name: fyaitg # 定义容器名
+    image: fyaitg # 定义镜像名
+    build: .
+    volumes:
+      - ./config:/app/config
+    restart: always
