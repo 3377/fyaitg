@@ -636,6 +636,18 @@ func mdToTgmd(text string) string {
     linkRegex := regexp.MustCompile("\\\\\\[(.*?)\\\\\\]\\\\\\((.*?)\\\\\\)")
     text = linkRegex.ReplaceAllString(text, "[$1]($2)")
 
+    // 处理标题
+    headerRegex := regexp.MustCompile(`(?m)^((?:\\#)+)\s(.+)`)
+    text = headerRegex.ReplaceAllStringFunc(text, func(match string) string {
+        parts := headerRegex.FindStringSubmatch(match)
+        if len(parts) != 3 {
+            return match
+        }
+        level := strings.Count(parts[1], "\\#") / 2
+        indent := strings.Repeat("  ", level-1)
+        return fmt.Sprintf("*%s*◆ *%s*", indent, parts[2])
+    })
+
     return text
 }
 
