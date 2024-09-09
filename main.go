@@ -10,6 +10,7 @@ import (
     "strings"
     "sync"
     "time"
+    "regexp"
 
     tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
     "gopkg.in/yaml.v2"
@@ -131,6 +132,8 @@ func main() {
         "model":    currentModel,
         "apiURL":   config.OpenAIConfig.APIURL,
     })
+    //初始化机器人菜单
+setCommands(bot)
 
     if systemPrompt != "" {
         conversationHistory = append(conversationHistory, Message{Role: "system", Content: systemPrompt, Time: time.Now()})
@@ -162,7 +165,32 @@ func main() {
         }
     }
 }
+func setCommands(bot *tgbotapi.BotAPI) {
+    commands := []tgbotapi.BotCommand{
+        {
+            Command:     "start",
+            Description: "开始使用机器人",
+        },
+        {
+            Command:     "models",
+            Description: "查看可用的模型列表",
+        },
+        {
+            Command:     "clear",
+            Description: "清除对话历史",
+        },
+    }
 
+    cmd := tgbotapi.NewSetMyCommands(commands...)
+    _, err := bot.Request(cmd)
+    if err != nil {
+        logEvent("SetCommandsError", err)
+    } else {
+        logEvent("CommandsSet", map[string]interface{}{
+            "commands": commands,
+        })
+    }
+}
 func loadConfig() {
     configFile, err := ioutil.ReadFile("/app/config/config.yaml")
     if err != nil {
@@ -269,7 +297,7 @@ func handleMessage(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 
     var formattedResponse string
     if err != nil {
-        formattedResponse = fmt.Sprintf("抱歉，发生了错误：%s\n请检查日志以获取更多信息。", escapeMarkdown(err.Error()))
+        formattedResponse = fmt.Sprintf("抱歉，发生了错误：%s\n请检查日志以获取更多信息。", escapeMarkdownV2(err.Error()))
     } else {
         formattedResponse = formatResponse(response, inputTokens, outputTokens, isAPITokenCount, duration, remainingRounds, remainingMinutes, remainingSeconds)
     }
@@ -298,16 +326,16 @@ func handleMessage(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 func sendInitInfo(bot *tgbotapi.BotAPI, chatID int64) {
     initInfo := fmt.Sprintf(
         "🤖 机器人初始化信息 🤖\n"+
-        "────────────────────\n"+
-        "📅  启动时间: %s\n"+
-        "🔢  系统版本: %s\n"+
-        "⚙️  当前模型: %s\n"+
-        "🌐  API地址: %s\n"+
-        "🔄  轮数限制: %d\n"+
-        "⏲️  记忆保留: %d 分钟\n"+
-        "────────────────────",
+            "──────────────\n"+
+            "📅  启动时间: %s\n"+
+            "🔢  系统版本: %s\n"+
+            "⚙️  当前模型: %s\n"+
+            "🌐  API地址: %s\n"+
+            "🔄  轮数限制: %d\n"+
+            "⏲️  记忆保留: %d 分钟\n"+
+            "──────────────",
         startTime.Format("2006-01-02 15:04:05"), version, currentModel, config.OpenAIConfig.APIURL, config.HistoryLength, config.HistoryTimeoutMinutes)
-    msg := tgbotapi.NewMessage(chatID, escapeMarkdown(initInfo))
+    msg := tgbotapi.NewMessage(chatID, escapeMarkdownV2(initInfo))
     msg.ParseMode = "MarkdownV2"
     bot.Send(msg)
 }
@@ -550,36 +578,7 @@ func handleCallbackQuery(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery) {
 }
 
 func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCount bool, duration time.Duration, remainingRounds, remainingMinutes, remainingSeconds int) string {
-    var formattedResponse strings.Builder
-    lines := strings.Split(response, "\n")
-    inCodeBlock := false
-    codeLanguage := ""
-
-    for i, line := range lines {
-        trimmedLine := strings.TrimSpace(line)
-
-        if strings.HasPrefix(trimmedLine, "```") {
-            if !inCodeBlock {
-                inCodeBlock = true
-                codeLanguage = strings.TrimPrefix(trimmedLine, "```")
-                formattedResponse.WriteString(fmt.Sprintf("```%s\n", codeLanguage))
-            } else {
-                inCodeBlock = false
-                formattedResponse.WriteString("```\n")
-            }
-        } else if inCodeBlock {
-            formattedResponse.WriteString(line + "\n")
-        } else {
-            formattedResponse.WriteString(escapeMarkdown(line))
-            if i < len(lines)-1 {
-                formattedResponse.WriteString("\n")
-            }
-        }
-    }
-
-    if inCodeBlock {
-        formattedResponse.WriteString("```\n")
-    }
+    formattedResponse := mdToTgmd(response)
 
     tokenSource := "API值"
     if !isAPITokenCount {
@@ -595,18 +594,79 @@ func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCo
         "🤖 当前使用模型: %s\n"+
         "━━━━━━━━━━━━━━━━━",
         inputTokens, tokenSource, totalInputTokens, outputTokens, tokenSource, totalOutputTokens, duration.Seconds(), remainingRounds, remainingMinutes, remainingSeconds, currentModel)
-    formattedResponse.WriteString(escapeMarkdown(stats))
+    
+    formattedResponse += mdToTgmd(stats)
 
-    return formattedResponse.String()
+    return formattedResponse
 }
 
-func escapeMarkdown(s string) string {
-    s = strings.ReplaceAll(s, "\\", "\\\\")
-    chars := []string{"_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", "!", "."}
-    for _, char := range chars {
-        s = strings.ReplaceAll(s, char, "\\"+char)
+func mdToTgmd(text string) string {
+    // 预处理：转义特殊字符
+    specialChars := []string{"_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
+    for _, char := range specialChars {
+        text = strings.ReplaceAll(text, char, "\\"+char)
     }
-    return s
+
+    // 处理代码块
+    codeBlockRegex := regexp.MustCompile("(?s)\\\\`\\\\`\\\\`(.*?)\\\\`\\\\`\\\\`")
+    text = codeBlockRegex.ReplaceAllStringFunc(text, func(match string) string {
+        // 移除代码块内容中的转义字符
+        inner := strings.Trim(match, "\\`")
+        inner = strings.ReplaceAll(inner, "\\", "")
+        return "```" + inner + "```"
+    })
+
+    // 处理行内代码
+    inlineCodeRegex := regexp.MustCompile("\\\\`(.*?)\\\\`")
+    text = inlineCodeRegex.ReplaceAllString(text, "`$1`")
+
+    // 处理粗体
+    boldRegex := regexp.MustCompile("\\\\\\*\\\\\\*(.*?)\\\\\\*\\\\\\*")
+    text = boldRegex.ReplaceAllString(text, "*$1*")
+
+    // 处理斜体
+    italicRegex := regexp.MustCompile("\\\\\\*(.*?)\\\\\\*")
+    text = italicRegex.ReplaceAllString(text, "_$1_")
+
+    // 处理删除线
+    strikethroughRegex := regexp.MustCompile("\\\\~\\\\~(.*?)\\\\~\\\\~")
+    text = strikethroughRegex.ReplaceAllString(text, "~$1~")
+
+    // 处理链接
+    linkRegex := regexp.MustCompile("\\\\\\[(.*?)\\\\\\]\\\\\\((.*?)\\\\\\)")
+    text = linkRegex.ReplaceAllString(text, "[$1]($2)")
+
+    return text
+}
+
+func escapeMarkdownV2(text string) string {
+    // 定义需要转义的特殊字符
+    specialChars := []string{"_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
+    
+    // 第一步：转义所有特殊字符
+    for _, char := range specialChars {
+        text = strings.ReplaceAll(text, char, "\\"+char)
+    }
+    
+    // 第二步：恢复已经正确转义的字符
+    for _, char := range specialChars {
+        text = strings.ReplaceAll(text, "\\\\"+char, "\\"+char)
+    }
+    
+    return text
+}
+
+func sendMessage(bot *tgbotapi.BotAPI, chatID int64, text string) {
+    formattedText := escapeMarkdownV2(text)
+    msg := tgbotapi.NewMessage(chatID, formattedText)
+    msg.ParseMode = "Markdown"
+
+    if _, err := bot.Send(msg); err != nil {
+        log.Printf("Error sending message: %v", err)
+        fallbackMsg := tgbotapi.NewMessage(chatID, "抱歉，在发送格式化消息时遇到了问题。这是未格式化的回复：\n\n"+text)
+        fallbackMsg.ParseMode = ""
+        bot.Send(fallbackMsg)
+    }
 }
 
 func logSentMessage(msg tgbotapi.Message) {
