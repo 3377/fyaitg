@@ -578,7 +578,10 @@ func handleCallbackQuery(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery) {
 }
 
 func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCount bool, duration time.Duration, remainingRounds, remainingMinutes, remainingSeconds int) string {
-    formattedResponse := mdToTgmd(response)
+    // 添加模型信息到顶部
+    modelInfo := fmt.Sprintf("🤖 *%s*\n\n", currentModel)
+    
+    formattedResponse := modelInfo + mdToTgmd(response)
 
     tokenSource := "API值"
     if !isAPITokenCount {
