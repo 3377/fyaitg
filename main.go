@@ -10,7 +10,6 @@ import (
     "strings"
     "sync"
     "time"
-    "regexp"
 
     tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
     "gopkg.in/yaml.v2"
@@ -614,7 +613,7 @@ func escapeMarkdownV2(text string) string {
         "_", "*", "[", "]", "(", ")", "~", "`", ">", 
         "#", "+", "-", "=", "|", "{", "}", ".", "!", 
         ",", ":", ";", "/", "\\", "^", "$", "&", "%",
-        "<", "'" } // 添加了缺失的右花括号
+        "<", "'" } // 添加了���失的右花括号
     
     // 第一步：转义所有特殊字符
     for _, char := range specialChars {
