@@ -10,6 +10,7 @@ import (
     "strings"
     "sync"
     "time"
+    "regexp"
 
     tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
     "gopkg.in/yaml.v2"
@@ -577,32 +578,24 @@ func handleCallbackQuery(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery) {
 }
 
 func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCount bool, duration time.Duration, remainingRounds, remainingMinutes, remainingSeconds int) string {
-    // 添加模型信息到顶部，确保特殊字符被正确转义
-    modelInfo := fmt.Sprintf("🤖 \\*%s\\*\n", escapeMarkdownV2(currentModel))
-    
-    // 处理主要响应内容，确保所有特殊字符被正确转义
-    escapedResponse := escapeMarkdownV2(response)
-    formattedResponse := modelInfo + escapedResponse
+    formattedResponse := mdToTgmd(response)
 
     tokenSource := "API值"
     if !isAPITokenCount {
         tokenSource = "估算"
     }
 
-    // 统计信息部分
     stats := fmt.Sprintf("\n\n━━━━━━ 统计信息 ━━━━━━\n"+
-        "📊 输入: %d \\(%s\\)    总输入: %d\n"+
-        "📈 输出: %d \\(%s\\)    总输出: %d\n"+
+        "📊 输入: %d (%s)    总输入: %d\n"+
+        "📈 输出: %d (%s)    总输出: %d\n"+
         "⏱ 处理时间: %.2f秒\n"+
         "🔄 剩余对话轮数: %d\n"+
         "🕒 剩余有效时间: %d分钟 %d秒\n"+
         "🤖 当前使用模型: %s\n"+
         "━━━━━━━━━━━━━━━━━",
-        inputTokens, escapeMarkdownV2(tokenSource), totalInputTokens,
-        outputTokens, escapeMarkdownV2(tokenSource), totalOutputTokens,
-        duration.Seconds(), remainingRounds,
-        remainingMinutes, remainingSeconds,
-        escapeMarkdownV2(currentModel))
+        inputTokens, tokenSource, totalInputTokens, outputTokens, tokenSource, totalOutputTokens, duration.Seconds(), remainingRounds, remainingMinutes, remainingSeconds, currentModel)
+    
+    formattedResponse += mdToTgmd(stats)
 
     return formattedResponse
 }
@@ -643,16 +636,24 @@ func mdToTgmd(text string) string {
     linkRegex := regexp.MustCompile("\\\\\\[(.*?)\\\\\\]\\\\\\((.*?)\\\\\\)")
     text = linkRegex.ReplaceAllString(text, "[$1]($2)")
 
+    // 处理标题
+    headerRegex := regexp.MustCompile(`(?m)^((?:\\#)+)\s(.+)`)
+    text = headerRegex.ReplaceAllStringFunc(text, func(match string) string {
+        parts := headerRegex.FindStringSubmatch(match)
+        if len(parts) != 3 {
+            return match
+        }
+        level := strings.Count(parts[1], "\\#") / 2
+        indent := strings.Repeat("  ", level-1)
+        return fmt.Sprintf("*%s*◆ *%s*", indent, parts[2])
+    })
+
     return text
 }
 
 func escapeMarkdownV2(text string) string {
     // 定义需要转义的特殊字符
-    specialChars := []string{
-        "_", "*", "[", "]", "(", ")", "~", "`", ">", 
-        "#", "+", "-", "=", "|", "{", "}", ".", "!", 
-        ",", ":", ";", "/", "\\", "^", "$", "&", "%",
-        "<", "'" } // 添加了���失的右花括号
+    specialChars := []string{"_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
     
     // 第一步：转义所有特殊字符
     for _, char := range specialChars {
@@ -662,21 +663,6 @@ func escapeMarkdownV2(text string) string {
     // 第二步：恢复已经正确转义的字符
     for _, char := range specialChars {
         text = strings.ReplaceAll(text, "\\\\"+char, "\\"+char)
-    }
-    
-    return text
-}
-
-// 移除所有 Markdown 格式标记的函数，用于降级显示
-func stripMarkdown(text string) string {
-    // 移除所有 Markdown 语法标记
-    markdownSyntax := []string{
-        "*", "_", "`", "~", ">", "#", "+", "-", "=", "|",
-        "[", "]", "(", ")", "{", "}", "\\",
-    }
-    
-    for _, syntax := range markdownSyntax {
-        text = strings.ReplaceAll(text, syntax, "")
     }
     
     return text
@@ -744,4 +730,3 @@ func (l *HumanReadableLogger) Write(p []byte) (n int, err error) {
     fmt.Println(string(jsonLog))
     return len(p), nil
 }
-
