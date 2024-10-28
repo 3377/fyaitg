@@ -604,7 +604,50 @@ func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCo
         remainingMinutes, remainingSeconds,
         escapeMarkdownV2(currentModel))
 
+<<<<<<< HEAD
     return formattedResponse + stats
+=======
+    return formattedResponse
+}
+
+func mdToTgmd(text string) string {
+    // 预处理：转义特殊字符
+    specialChars := []string{"_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
+    for _, char := range specialChars {
+        text = strings.ReplaceAll(text, char, "\\"+char)
+    }
+
+    // 处理代码块
+    codeBlockRegex := regexp.MustCompile("(?s)\\\\`\\\\`\\\\`(.*?)\\\\`\\\\`\\\\`")
+    text = codeBlockRegex.ReplaceAllStringFunc(text, func(match string) string {
+        // 移除代码块内容中的转义字符
+        inner := strings.Trim(match, "\\`")
+        inner = strings.ReplaceAll(inner, "\\", "")
+        return "```" + inner + "```"
+    })
+
+    // 处理行内代码
+    inlineCodeRegex := regexp.MustCompile("\\\\`(.*?)\\\\`")
+    text = inlineCodeRegex.ReplaceAllString(text, "`$1`")
+
+    // 处理粗体
+    boldRegex := regexp.MustCompile("\\\\\\*\\\\\\*(.*?)\\\\\\*\\\\\\*")
+    text = boldRegex.ReplaceAllString(text, "*$1*")
+
+    // 处理斜体
+    italicRegex := regexp.MustCompile("\\\\\\*(.*?)\\\\\\*")
+    text = italicRegex.ReplaceAllString(text, "_$1_")
+
+    // 处理删除线
+    strikethroughRegex := regexp.MustCompile("\\\\~\\\\~(.*?)\\\\~\\\\~")
+    text = strikethroughRegex.ReplaceAllString(text, "~$1~")
+
+    // 处理链接
+    linkRegex := regexp.MustCompile("\\\\\\[(.*?)\\\\\\]\\\\\\((.*?)\\\\\\)")
+    text = linkRegex.ReplaceAllString(text, "[$1]($2)")
+
+    return text
+>>>>>>> parent of 63aac7f (更新 main.go)
 }
 
 func escapeMarkdownV2(text string) string {
