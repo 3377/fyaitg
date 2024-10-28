@@ -578,18 +578,18 @@ func handleCallbackQuery(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery) {
 }
 
 func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCount bool, duration time.Duration, remainingRounds, remainingMinutes, remainingSeconds int) string {
-    // 添加模型信息到顶部，确保特殊字符被转义
-    modelInfo := fmt.Sprintf("🤖 *%s*\n", escapeMarkdownV2(currentModel))
+    // 添加模型信息到顶部，确保特殊字符被正确转义
+    modelInfo := fmt.Sprintf("🤖 \\*%s\\*\n", escapeMarkdownV2(currentModel))
     
     // 处理主要响应内容
-    formattedResponse := modelInfo + escapeMarkdownV2(response)
+    formattedResponse := modelInfo + response
 
     tokenSource := "API值"
     if !isAPITokenCount {
         tokenSource = "估算"
     }
 
-    // 统计信息中的特殊字符需要转义
+    // 统计信息部分，确保所有特殊字符都被转义
     stats := fmt.Sprintf("\n\n━━━━━━ 统计信息 ━━━━━━\n"+
         "📊 输入: %d \\(%s\\)    总输入: %d\n"+
         "📈 输出: %d \\(%s\\)    总输出: %d\n"+
@@ -604,7 +604,6 @@ func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCo
         remainingMinutes, remainingSeconds,
         escapeMarkdownV2(currentModel))
     
-    // 不需要对stats使用mdToTgmd，因为已经手动处理了特殊字符
     formattedResponse += stats
 
     return formattedResponse
@@ -740,3 +739,4 @@ func (l *HumanReadableLogger) Write(p []byte) (n int, err error) {
     fmt.Println(string(jsonLog))
     return len(p), nil
 }
+
