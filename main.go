@@ -578,27 +578,34 @@ func handleCallbackQuery(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery) {
 }
 
 func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCount bool, duration time.Duration, remainingRounds, remainingMinutes, remainingSeconds int) string {
-    // 添加模型信息到顶部
-    modelInfo := fmt.Sprintf("🤖 *%s*\n", currentModel)
+    // 添加模型信息到顶部，确保特殊字符被转义
+    modelInfo := fmt.Sprintf("🤖 *%s*\n", escapeMarkdownV2(currentModel))
     
-    formattedResponse := modelInfo + mdToTgmd(response)
+    // 处理主要响应内容
+    formattedResponse := modelInfo + escapeMarkdownV2(response)
 
     tokenSource := "API值"
     if !isAPITokenCount {
         tokenSource = "估算"
     }
 
+    // 统计信息中的特殊字符需要转义
     stats := fmt.Sprintf("\n\n━━━━━━ 统计信息 ━━━━━━\n"+
-        "📊 输入: %d (%s)    总输入: %d\n"+
-        "📈 输出: %d (%s)    总输出: %d\n"+
+        "📊 输入: %d \\(%s\\)    总输入: %d\n"+
+        "📈 输出: %d \\(%s\\)    总输出: %d\n"+
         "⏱ 处理时间: %.2f秒\n"+
         "🔄 剩余对话轮数: %d\n"+
         "🕒 剩余有效时间: %d分钟 %d秒\n"+
         "🤖 当前使用模型: %s\n"+
         "━━━━━━━━━━━━━━━━━",
-        inputTokens, tokenSource, totalInputTokens, outputTokens, tokenSource, totalOutputTokens, duration.Seconds(), remainingRounds, remainingMinutes, remainingSeconds, currentModel)
+        inputTokens, escapeMarkdownV2(tokenSource), totalInputTokens,
+        outputTokens, escapeMarkdownV2(tokenSource), totalOutputTokens,
+        duration.Seconds(), remainingRounds,
+        remainingMinutes, remainingSeconds,
+        escapeMarkdownV2(currentModel))
     
-    formattedResponse += mdToTgmd(stats)
+    // 不需要对stats使用mdToTgmd，因为已经手动处理了特殊字符
+    formattedResponse += stats
 
     return formattedResponse
 }
