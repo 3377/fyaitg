@@ -604,9 +604,6 @@ func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCo
         remainingMinutes, remainingSeconds,
         escapeMarkdownV2(currentModel))
 
-<<<<<<< HEAD
-    return formattedResponse + stats
-=======
     return formattedResponse
 }
 
@@ -647,7 +644,6 @@ func mdToTgmd(text string) string {
     text = linkRegex.ReplaceAllString(text, "[$1]($2)")
 
     return text
->>>>>>> parent of 63aac7f (更新 main.go)
 }
 
 func escapeMarkdownV2(text string) string {
