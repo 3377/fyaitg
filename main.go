@@ -581,15 +581,16 @@ func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCo
     // 添加模型信息到顶部，确保特殊字符被正确转义
     modelInfo := fmt.Sprintf("🤖 \\*%s\\*\n", escapeMarkdownV2(currentModel))
     
-    // 处理主要响应内容
-    formattedResponse := modelInfo + response
+    // 处理主要响应内容，确保所有特殊字符被正确转义
+    escapedResponse := escapeMarkdownV2(response)
+    formattedResponse := modelInfo + escapedResponse
 
     tokenSource := "API值"
     if !isAPITokenCount {
         tokenSource = "估算"
     }
 
-    // 统计信息部分，确保所有特殊字符都被转义
+    // 统计信息部分
     stats := fmt.Sprintf("\n\n━━━━━━ 统计信息 ━━━━━━\n"+
         "📊 输入: %d \\(%s\\)    总输入: %d\n"+
         "📈 输出: %d \\(%s\\)    总输出: %d\n"+
@@ -603,66 +604,18 @@ func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCo
         duration.Seconds(), remainingRounds,
         remainingMinutes, remainingSeconds,
         escapeMarkdownV2(currentModel))
-    
-    formattedResponse += stats
 
-    return formattedResponse
-}
-
-func mdToTgmd(text string) string {
-    // 预处理：转义特殊字符
-    specialChars := []string{"_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
-    for _, char := range specialChars {
-        text = strings.ReplaceAll(text, char, "\\"+char)
-    }
-
-    // 处理代码块
-    codeBlockRegex := regexp.MustCompile("(?s)\\\\`\\\\`\\\\`(.*?)\\\\`\\\\`\\\\`")
-    text = codeBlockRegex.ReplaceAllStringFunc(text, func(match string) string {
-        // 移除代码块内容中的转义字符
-        inner := strings.Trim(match, "\\`")
-        inner = strings.ReplaceAll(inner, "\\", "")
-        return "```" + inner + "```"
-    })
-
-    // 处理行内代码
-    inlineCodeRegex := regexp.MustCompile("\\\\`(.*?)\\\\`")
-    text = inlineCodeRegex.ReplaceAllString(text, "`$1`")
-
-    // 处理粗体
-    boldRegex := regexp.MustCompile("\\\\\\*\\\\\\*(.*?)\\\\\\*\\\\\\*")
-    text = boldRegex.ReplaceAllString(text, "*$1*")
-
-    // 处理斜体
-    italicRegex := regexp.MustCompile("\\\\\\*(.*?)\\\\\\*")
-    text = italicRegex.ReplaceAllString(text, "_$1_")
-
-    // 处理删除线
-    strikethroughRegex := regexp.MustCompile("\\\\~\\\\~(.*?)\\\\~\\\\~")
-    text = strikethroughRegex.ReplaceAllString(text, "~$1~")
-
-    // 处理链接
-    linkRegex := regexp.MustCompile("\\\\\\[(.*?)\\\\\\]\\\\\\((.*?)\\\\\\)")
-    text = linkRegex.ReplaceAllString(text, "[$1]($2)")
-
-    // 处理标题
-    headerRegex := regexp.MustCompile(`(?m)^((?:\\#)+)\s(.+)`)
-    text = headerRegex.ReplaceAllStringFunc(text, func(match string) string {
-        parts := headerRegex.FindStringSubmatch(match)
-        if len(parts) != 3 {
-            return match
-        }
-        level := strings.Count(parts[1], "\\#") / 2
-        indent := strings.Repeat("  ", level-1)
-        return fmt.Sprintf("*%s*◆ *%s*", indent, parts[2])
-    })
-
-    return text
+    return formattedResponse + stats
 }
 
 func escapeMarkdownV2(text string) string {
     // 定义需要转义的特殊字符
-    specialChars := []string{"_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
+    specialChars := []string{
+        "_", "*", "[", "]", "(", ")", "~", "`", ">", 
+        "#", "+", "-", "=", "|", "{", "}", ".", "!", 
+        ",", ":", ";", "/", "\\", "^", "$", "&", "%",
+        "<", "'"
+    }
     
     // 第一步：转义所有特殊字符
     for _, char := range specialChars {
@@ -672,6 +625,21 @@ func escapeMarkdownV2(text string) string {
     // 第二步：恢复已经正确转义的字符
     for _, char := range specialChars {
         text = strings.ReplaceAll(text, "\\\\"+char, "\\"+char)
+    }
+    
+    return text
+}
+
+// 移除所有 Markdown 格式标记的函数，用于降级显示
+func stripMarkdown(text string) string {
+    // 移除所有 Markdown 语法标记
+    markdownSyntax := []string{
+        "*", "_", "`", "~", ">", "#", "+", "-", "=", "|",
+        "[", "]", "(", ")", "{", "}", "\\",
+    }
+    
+    for _, syntax := range markdownSyntax {
+        text = strings.ReplaceAll(text, syntax, "")
     }
     
     return text
