@@ -578,10 +578,11 @@ func handleCallbackQuery(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery) {
 }
 
 func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCount bool, duration time.Duration, remainingRounds, remainingMinutes, remainingSeconds int) string {
-    // 添加模型信息到顶部
-    modelInfo := fmt.Sprintf("🤖 *%s*\n\n", currentModel)
+    // 先对所有内容进行转义
+    response = escapeMarkdownV2(response)
+    modelInfo := fmt.Sprintf("🤖 *%s*\n\n", escapeMarkdownV2(currentModel))
     
-    formattedResponse := modelInfo + mdToTgmd(response)
+    formattedResponse := modelInfo + response
 
     tokenSource := "API值"
     if !isAPITokenCount {
@@ -589,18 +590,20 @@ func formatResponse(response string, inputTokens, outputTokens int, isAPITokenCo
     }
 
     stats := fmt.Sprintf("\n\n━━━━━━ 统计信息 ━━━━━━\n"+
-        "📊 输入: %d (%s)    总输入: %d\n"+
-        "📈 输出: %d (%s)    总输出: %d\n"+
+        "📊 输入: %d \\(%s\\)    总输入: %d\n"+
+        "📈 输出: %d \\(%s\\)    总输出: %d\n"+
         "⏱ 处理时间: %.2f秒\n"+
         "🔄 剩余对话轮数: %d\n"+
         "🕒 剩余有效时间: %d分钟 %d秒\n"+
         "🤖 当前使用模型: %s\n"+
         "━━━━━━━━━━━━━━━━━",
-        inputTokens, tokenSource, totalInputTokens, outputTokens, tokenSource, totalOutputTokens, duration.Seconds(), remainingRounds, remainingMinutes, remainingSeconds, currentModel)
-    
-    formattedResponse += mdToTgmd(stats)
+        inputTokens, tokenSource, totalInputTokens,
+        outputTokens, tokenSource, totalOutputTokens,
+        duration.Seconds(), remainingRounds,
+        remainingMinutes, remainingSeconds,
+        escapeMarkdownV2(currentModel))
 
-    return formattedResponse
+    return formattedResponse + stats
 }
 
 func mdToTgmd(text string) string {
@@ -656,7 +659,11 @@ func mdToTgmd(text string) string {
 
 func escapeMarkdownV2(text string) string {
     // 定义需要转义的特殊字符
-    specialChars := []string{"_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"}
+    specialChars := []string{
+        "_", "*", "[", "]", "(", ")", "~", "`", ">",
+        "#", "+", "-", "=", "|", "{", "}", ".", "!",
+        ",", ":", ";", "/", "\\", "^", "$", "&", "%"
+    }
     
     // 第一步：转义所有特殊字符
     for _, char := range specialChars {
